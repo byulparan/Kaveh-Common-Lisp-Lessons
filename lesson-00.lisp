@@ -1,81 +1,40 @@
-#|
-In emacs, to load this file, either:
-
-select buffer: C-x h
-eval selection: C-c C-r
-
-or modify pathname as needed and eval this expression:
-
-(load "~/Development/kaveh-common-lisp-lessons/lesson-00.lisp")
-|#
-
-(in-package "CL-USER")
-(require "COCOA")
-(eval-when (:compile-toplevel :load-toplevel :execute)
-  (objc:load-framework "OpenGL" :gl))
-
-;;;; graphics ===========================================================
 
 ;;; view class that draws a square
-(defclass my-opengl-view (ns:ns-opengl-view)
-  ()
-  (:metaclass ns:+ns-object))
+(defclass my-opengl-view (ns:opengl-view)
+  ())
 
 ;;; draw a square outline in OpenGL
 (defun draw-square ()
-  (#_glColor3f 1.0 1.0 1.0)
-  (#_glLineWidth 3.0)
-  (#_glBegin #$GL_LINE_LOOP)
-  (#_glVertex3f  0.5  0.5 0.0)
-  (#_glVertex3f  0.5 -0.5 0.0)
-  (#_glVertex3f -0.5 -0.5 0.0)
-  (#_glVertex3f -0.5  0.5 0.0)
-  (#_glEnd))
+  (gl:color 1.0 1.0 1.0)
+  (gl:line-width 3.0)
+  (gl:begin :line-loop)
+  (gl:vertex  0.5  0.5 0.0)
+  (gl:vertex  0.5 -0.5 0.0)
+  (gl:vertex -0.5 -0.5 0.0)
+  (gl:vertex -0.5  0.5 0.0)
+  (gl:end))
 
 ;;; display the view
-(objc:defmethod (#/drawRect: :void) ((self my-opengl-view) (rect :<NSR>ect))
-  (#_glClearColor 0.0 0.0 0.0 0.0)
-  (#_glClear #$GL_COLOR_BUFFER_BIT)
-  (draw-square)
-  (#_glFlush))
+(defmethod ns:draw ((view my-opengl-view))
+  (gl:clear-color 0.0 0.0 0.0 0.0)
+  (gl:clear :color-buffer-bit)
+  (draw-square))
 
-;;; respond to first click in window
-(objc:defmethod (#/acceptsFirstMouse: :<BOOL>) ((self my-opengl-view) event)
-  (declare (ignore event))
-  t)
-
-;;; request a view refresh when mouse click
-(objc:defmethod (#/mouseDown: :void) ((self my-opengl-view) event)
-  (declare (ignore event))
-  (#/setNeedsDisplay: self t))
+(defmethod ns:mouse-down ((view my-opengl-view) event loc-x loc-y)
+  (declare (ignore event loc-x loc-y))
+  (ns:redisplay view))
 
 ;;; create and display a window containing an OpeGL view
 (defun show-window ()
-  (ns:with-ns-rect (frame 0 0 512 512)
-    (let* ((w (make-instance 'ns:ns-window
-			     :with-content-rect frame
-			     :style-mask (logior #$NSTitledWindowMask
-						 #$NSClosableWindowMask
-						 #$NSMiniaturizableWindowMask)
-			     :backing #$NSBackingStoreBuffered
-			     :defer t))
-	   (v (make-instance 'my-opengl-view)))
-      (#/setContentView: w v)
-      (#/setNeedsDisplay: v t)
-      (#/release v)
-      (#/center w)
-      (#/orderFront: w nil)
-      w)))
+  (let* ((w (make-instance 'ns:window :x 0 :y 0 :w 512 :h 512))
+	 (v (make-instance 'my-opengl-view)))
+    (setf (ns:content-view w) v)
+    (ns:window-show w)))
 
-;;; execute code on main thread -- necessary for interacting with UI elements
-(defmacro on-main-thread (&rest actions)
-  `(ccl::call-in-event-process
-     #'(lambda ()
-         ,@actions)))
 
-;;; run function
 (defun run ()
-  (on-main-thread (show-window)))
+  (ns:with-event-loop nil
+    (show-window)))
 
 (run)
 

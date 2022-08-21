@@ -1,74 +1,34 @@
-#|
-Lesson 01 -- Points & Shapes
 
-In emacs, to load this file, either:
 
-select buffer: C-x h
-eval selection: C-c C-r
-
-or modify pathname as needed and eval this expression:
-
-(load "~/Development/kaveh-common-lisp-lessons/lesson-01.lisp")
-|#
-
-(in-package "CL-USER")
-(require "COCOA")
-(eval-when (:compile-toplevel :load-toplevel :execute)
-  (objc:load-framework "OpenGL" :gl))
-
-;;;; device code ===============================================================
 
 ;;; view class that draws a scene
-(defclass scene-view (ns:ns-opengl-view)
-  ((scene :accessor scene :initarg :scene :initform nil))
-  (:metaclass ns:+ns-object))
+(defclass scene-view (ns:opengl-view)
+  ((scene :accessor scene :initarg :scene :initform nil)))
 
 ;;; display the view
-(objc:defmethod (#/drawRect: :void) ((self scene-view) (rect :<NSR>ect))
-  (#_glClearColor 0.0 0.0 0.0 0.0)
-  (#_glClear #$GL_COLOR_BUFFER_BIT)
+(defmethod ns:draw ((self scene-view))
+  (gl:clear-color 0.0 0.0 0.0 0.0)
+  (gl:clear :color-buffer-bit)
   (when (scene self)
-    (draw (scene self)))
-  (#_glFlush))
+    (draw (scene self))))
 
-;;; respond to first click in window
-(objc:defmethod (#/acceptsFirstMouse: :<BOOL>) ((self scene-view) event)
-  (declare (ignore event))
-  t)
 
-;;; request a view refresh when mouse click
-(objc:defmethod (#/mouseDown: :void) ((self scene-view) event)
-  (declare (ignore event))
-  (#/setNeedsDisplay: self t))
+(defmethod ns:mouse-down ((view scene-view) event locx locy)
+  (declare (ignore event locx locy))
+  (ns:redisplay view))
 
 ;;; create and display a window containing an OpenGL view to display a scene
 (defun show-window (scene)
-  (ns:with-ns-rect (frame 0 0 512 512)
-    (let* ((w (make-instance 'ns:ns-window
-                             :title "Kaveh's Common Lisp Lessons"
-			     :with-content-rect frame
-			     :style-mask (logior #$NSTitledWindowMask
-						 #$NSClosableWindowMask
-						 #$NSMiniaturizableWindowMask)
-			     :backing #$NSBackingStoreBuffered
-			     :defer t))
-	   (v (make-instance 'scene-view :scene scene)))
-      (#/setContentView: w v)
-      (#/setNeedsDisplay: v t)
-      (#/release v)
-      (#/center w)
-      (#/orderFront: w nil)
-      w)))
-
-;;; execute code on main thread -- necessary for interacting with UI elements
-(defmacro on-main-thread (&rest actions)
-  `(ccl::call-in-event-process
-    (lambda ()
-      ,@actions)))
+  (let* ((w (make-instance 'ns:window
+              :title "Kaveh's Common Lisp Lessons"
+	      :x 0 :y 0 :w 512 :h 512))
+	 (v (make-instance 'scene-view :scene scene)))
+    (setf (ns:content-view w) v)
+    (ns:window-show w)
+    w))
 
 ;;;; shape =====================================================================
 
-;;; abstract superclass of all shapes
 (defclass shape ()
   ())
 
@@ -100,10 +60,11 @@ or modify pathname as needed and eval this expression:
 (defparameter *window* nil)
 
 (defun run ()
-  (setf *window* (on-main-thread (show-window *scene*))))
+  (setf *window* (ns:with-event-loop (:waitp t) (show-window *scene*))))
 
 (defun redraw ()
-  (#/setNeedsDisplay: (#/contentView *window*) t))
+  (ns:with-event-loop nil
+    (ns:redisplay (ns:content-view *window*))))
 
 #| >>> create new window
 (run)
@@ -188,14 +149,14 @@ p
   (push p (points self)))
 
 (defmethod draw ((self polygon-shape))
-  (#_glColor3f 1.0 1.0 1.0)
-  (#_glLineWidth 3.0)
+  (gl:color 1.0 1.0 1.0)
+  (gl:line-width 3.0)
   (if (is-closed-shape? self)
-      (#_glBegin #$GL_LINE_LOOP)
-      (#_glBegin #$GL_LINE_STRIP))
+      (gl:begin :line-loop)
+      (gl:begin :line-strip))
   (dolist (p (points self))
-    (#_glVertex3f (x p) (y p) 0.0))
-  (#_glEnd))
+    (gl:vertex (x p) (y p) 0.0))
+  (gl:end))
 
 ;;; square
 (defun make-square-shape (length)

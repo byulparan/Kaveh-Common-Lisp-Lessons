@@ -111,14 +111,14 @@ Lesson 03 -- Transforms
 ;;; push matrix and do transform operations before drawing
 (defmethod draw :before ((self shape))
   (let ((xform (transform self)))
-    (#_glPushMatrix)
-    (#_glTranslatef (x (translate xform)) (y (translate xform)) 0.0)
-    (#_glRotatef (rotate xform) 0.0 0.0 1.0)
-    (#_glScalef (x (scale xform)) (y (scale xform)) 1.0)))
+    (gl:push-matrix)
+    (gl:translate (x (translate xform)) (y (translate xform)) 0.0)
+    (gl:rotate (rotate xform) 0.0 0.0 1.0)
+    (gl:scale (x (scale xform)) (y (scale xform)) 1.0)))
 
 ;;; pop matrix after drawing
 (defmethod draw :after ((self shape))
-  (#_glPopMatrix))
+  (gl:pop-matrix))
 
 ;;; >>> macro for operating on all shapes in a scene
 (defmacro for-scene-shapes (func)

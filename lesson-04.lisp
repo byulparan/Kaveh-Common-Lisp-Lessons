@@ -56,15 +56,15 @@ Lesson 04 -- Transforming Shapes
   ((size :accessor size :initarg :size :initform 0.1)))
 
 (defmethod draw ((self marker-shape))
-  (#_glColor3f 1.0 0.0 0.0)
-  (#_glLineWidth 3.0)
-  (#_glBegin #$GL_LINES)
+  (gl:color 1.0 0.0 0.0)
+  (gl:line-width 3.0)
+  (gl:begin :lines)
   (let ((s (/ (size self) 2.0)))
-    (#_glVertex3f 0.0     s  0.0)
-    (#_glVertex3f 0.0  (- s) 0.0)
-    (#_glVertex3f    s  0.0  0.0)
-    (#_glVertex3f (- s) 0.0  0.0))
-  (#_glEnd))
+    (gl:vertex 0.0     s  0.0)
+    (gl:vertex 0.0  (- s) 0.0)
+    (gl:vertex    s  0.0  0.0)
+    (gl:vertex (- s) 0.0  0.0))
+  (gl:End))
 
 ;;; test with marker-shape
 (with-clear-and-redraw

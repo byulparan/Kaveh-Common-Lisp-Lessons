@@ -2,7 +2,6 @@
 Lesson 07 -- Colors
 |#
 
-(load "~/Development/kaveh-common-lisp-lessons/lesson-06.lisp")
 
 ;;;; methods belong to generic functions, not classes
 #|
@@ -41,7 +40,7 @@ Lesson 07 -- Colors
     (setf (aref c1 3) (aref c2 3))))
 
 (defun c-lerp (f c1 c2)
-  (map 'array (lambda (a b) (lerp f a b)) c1 c2))
+  (map 'vector (lambda (a b) (lerp f a b)) c1 c2))
 
 (defun c-rand ()
   (c! (rand2 0.0 1.0) (rand2 0.0 1.0) (rand2 0.0 1.0)))
@@ -50,13 +49,13 @@ Lesson 07 -- Colors
   (c! (rand2 0.0 1.0) (rand2 0.0 1.0) (rand2 0.0 1.0) (rand2 0.0 1.0)))
 
 (defun c-rand1 (c)
-  (map 'array #'rand1 c))
+  (map 'vector #'rand1 c))
 
 (defun c-rand2 (c1 c2)
   (c-lerp (rand2 0 1) c1 c2))
 
 (defun c+ (c1 c2)
-  (map 'array #'+ c1 c2))
+  (map 'vector #'+ c1 c2))
 
 (defun c-jitter (c c-delta)
   (c+ c (c-rand1 c-delta)))
@@ -71,20 +70,19 @@ Lesson 07 -- Colors
 ;;;; device ============================================================
 
 ;;; enhance view draw method to support alpha blending
-(objc:defmethod (#/drawRect: :void) ((self scene-view) (rect :<NSR>ect))
+(defmethod ns:draw ((self scene-view))
   ;; enable alpha blending
-  (#_glEnable #$GL_BLEND)
-  (#_glBlendEquationSeparate #$GL_FUNC_ADD #$GL_FUNC_ADD)
-  (#_glBlendFuncSeparate #$GL_SRC_ALPHA #$GL_ONE_MINUS_SRC_ALPHA #$GL_ONE #$GL_ONE_MINUS_SRC_ALPHA)
+  (gl:enable :blend)
+  (gl:blend-equation-separate :func-add :func-add)
+  (gl:blend-func-separate :src-alpha :one-minus-src-alpha :one :one-minus-src-alpha)
   ;; set background color
   (let ((bg (if (scene self)
                 (bg-color (scene self))
                 (c! 0 0 0 0))))
-    (#_glClearColor (c-red bg) (c-green bg) (c-blue bg) (c-alpha bg)))
-  (#_glClear #$GL_COLOR_BUFFER_BIT)
+    (gl:clear-color (c-red bg) (c-green bg) (c-blue bg) (c-alpha bg)))
+  (gl:clear :color-buffer-bit)
   (when (scene self)
-    (draw (scene self)))
-  (#_glFlush))
+    (draw (scene self))))
 
 ;;;; appearance ================================================================
 
@@ -110,22 +108,22 @@ Lesson 07 -- Colors
   ;; draw filled shape
   (let ((col (fill-color (appearance self))))
     (when (> (c-alpha col) 0)           ;don't draw if alpha is 0
-      (#_glColor4f (aref col 0) (aref col 1) (aref col 2) (aref col 3))
-      (#_glBegin #$GL_POLYGON)
+      (gl:color (aref col 0) (aref col 1) (aref col 2) (aref col 3))
+      (gl:begin :polygon)
       (dolist (p (points self))
-	(#_glVertex3f (x p) (y p) 0.0))
-      (#_glEnd)))
+	(gl:vertex (x p) (y p) 0.0))
+      (gl:End)))
   ;; draw outline
   (let ((col (outline-color (appearance self))))
     (when (> (c-alpha col) 0)           ;don't draw if alpha is 0
-      (#_glColor4f (aref col 0) (aref col 1) (aref col 2) (aref col 3))
-      (#_glLineWidth 3.0)
+      (gl:color (aref col 0) (aref col 1) (aref col 2) (aref col 3))
+      (gl:line-width 3.0)
       (if (is-closed-shape? self)
-	  (#_glBegin #$GL_LINE_LOOP)
-	  (#_glBegin #$GL_LINE_STRIP))
+	  (gl:begin :line-loop)
+	  (gl:begin :line-strip))
       (dolist (p (points self))
-	(#_glVertex3f (x p) (y p) 0.0))
-      (#_glEnd))))
+	(gl:vertex (x p) (y p) 0.0))
+      (gl:End))))
 
 ;;;; color tests ===============================================================
 
@@ -195,7 +193,6 @@ Lesson 07 -- Colors
 ;;; generic functions for setting colors
 
 (defgeneric set-fill-color (self color &rest args)
-
   (:method ((self t) color &key (alpha t))
     (declare (ignore color alpha))) ;do nothing
   

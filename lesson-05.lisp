@@ -220,5 +220,5 @@ Lesson 05 -- Groups
   (rotate-by *wrist* 10))
 
 (with-redraw
-  (flex))
+  (flex))e
 

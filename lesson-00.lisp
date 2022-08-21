@@ -1,3 +1,6 @@
+(ql:quickload :cl-nextstep)
+(ns:start-event-loop)
+
 
 ;;; view class that draws a square
 (defclass my-opengl-view (ns:opengl-view)

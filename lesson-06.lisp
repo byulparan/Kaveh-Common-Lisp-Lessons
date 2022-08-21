@@ -2,7 +2,6 @@
 Lesson 06 -- Hierarchies
 |#
 
-(load "~/Development/kaveh-common-lisp-lessons/lesson-05.lisp")
 
 ;;;; modeling with groups ===============================================
 

@@ -1,13 +1,3 @@
-#|
-Lesson 08 -- Colors & Groups
-|#
-
-(load "~/Development/kaveh-common-lisp-lessons/lesson-07.lisp")
-
-#|
-update-instance-for-redefined-class
-ensure-generic-function
-|#
 
 (defun randomize-colors (shape)
   (set-fill-color shape #'c-rand))

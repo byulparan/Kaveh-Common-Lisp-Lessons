@@ -9,12 +9,6 @@ Lesson 04 -- Transforming Shapes
 
 ;;; restarts -- recover and continue from error ================================
 
-;;; unbound variable -- provide value
-(+ 1 my-variable)
-
-;;; undefined function -- define and proceed
-(+ 2 (my-triple 5))
-
 (defun my-triple (x) (* x 3))
 
 ;;; absolute transform operations ==============================================
@@ -104,7 +98,7 @@ Lesson 04 -- Transforming Shapes
   (make-shapes-at-points (lambda () (make-hexagon-shape 0.2))
                          (points (make-circle-shape 1.5 32))))
 
-;;; shapes on a sine curve
+;;; on a sine curve
 (with-clear-and-redraw
   (make-shapes-at-points (lambda () (make-hexagon-shape 0.2))
                          (mapcar (lambda (p) (p+ p (p! -0.5 0.0))) ;center sine curve by trans (-.5, 0)
